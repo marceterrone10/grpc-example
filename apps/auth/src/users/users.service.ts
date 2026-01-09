@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { CreateUserDto, UpdateUserDto, User } from 'y/common';
+import { Observable, Subject } from 'rxjs';
+import { CreateUserDto, PaginationDto, UpdateUserDto, User, Users } from 'y/common';
 
 
 @Injectable()
@@ -57,5 +58,27 @@ export class UsersService implements OnModuleInit {
     }
     this.users = this.users.filter(user => user.id !== id);
     return user;
+  }
+
+  queryUsers(
+    paginationDtoStream: Observable<PaginationDto>
+  ): Observable<Users> {
+    const subject = new Subject<Users>();
+
+    const onNext = (paginationDto: PaginationDto) => {
+      const start = paginationDto.page * paginationDto.skip;
+      subject.next({
+        users: this.users.slice(start, start + paginationDto.skip)
+      });
+    };
+
+    const onComplete = () => subject.complete();
+
+    paginationDtoStream.subscribe({
+      next: onNext,
+      complete: onComplete
+    });
+
+    return subject.asObservable();
   }
 }

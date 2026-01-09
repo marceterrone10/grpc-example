@@ -1,6 +1,6 @@
-import { Controller } from '@nestjs/common';
+import { Controller, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { type UsersServiceController, type CreateUserDto, type UpdateUserDto, UsersServiceControllerMethods, FindOneUserDto } from 'y/common';
+import { type UsersServiceController, type CreateUserDto, type UpdateUserDto, UsersServiceControllerMethods, FindOneUserDto, PaginationDto } from 'y/common';
 import { Observable } from 'rxjs';
 
 @Controller()
@@ -17,7 +17,11 @@ export class UsersController implements UsersServiceController {
   }
 
   findOneUser(findOneUserDto: FindOneUserDto) {
-    return this.usersService.findOne(findOneUserDto.id);
+    const user = this.usersService.findOne(findOneUserDto.id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   updateUser(updateUserDto: UpdateUserDto) {
@@ -25,10 +29,10 @@ export class UsersController implements UsersServiceController {
   }
 
   removeUser(findOneUserDto: FindOneUserDto) {
-    return this.usersService.remove(id);
+    return this.usersService.remove(findOneUserDto.id);
   }
 
-  queryUsers(paginationDto: Observable<PaginationDto>) {
-    return this.usersService.queryUsers(paginationDto);
+  queryUsers(paginationDtoStream: Observable<PaginationDto>) {
+    return this.usersService.queryUsers(paginationDtoStream);
   }
 }
